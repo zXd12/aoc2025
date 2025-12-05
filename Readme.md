@@ -4,9 +4,9 @@ Running the tests requires setting your aoc session cookie in the COOKIE environ
 
 ## Perfs
 
-Benchmark run on a 5 3500
-Every solution is single-threaded
-Input reading to a &\[u8\] is not counted in the time
+Benchmark run on a 5 3500 \
+Every solution is single-threaded \
+Input reading to a &\[u8\] is not counted in the time \
 The input array is not mutable
 
 ```
