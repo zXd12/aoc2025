@@ -1,0 +1,16 @@
+[package]
+name = "aoc2025"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+dotenv = "0.15.0"
+reqwest = { version = "0.12.24", features = ["blocking"] }
+
+
+# bench compile flags
+[profile.bench]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = "debuginfo"
