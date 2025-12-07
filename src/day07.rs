@@ -10,19 +10,26 @@ pub fn solve_part1(input: &[u8]) -> u64 {
             break;
         }
     }
+    // all of the odd lines of the output are empty, we only care about the even ones
     let line_count = input.len() / line_length / 2;
     let mut tachion_vec = vec![false; line_length * line_count];
     tachion_vec[(line_length / 2) - 1] = true;
     for line_index in 1..line_count {
-        let line_first_byte_index = (line_index * (line_length - 1)) + (line_length / 2);
+        // the input is a triangle. we can just iterate over (middle_of_the_line - line_index)..(middle_of_the_line + line_index).
+        let line_first_byte_index = (line_index * line_length) + (line_length / 2) - line_index;
         for row_index in 0..line_index {
             let byte_index = line_first_byte_index + (2 * row_index);
-            if tachion_vec[byte_index - line_length]
-                && input[byte_index + (line_index * line_length)] == b'^'
-            {
-                result += 1;
-                tachion_vec[byte_index - 1] = true;
-                tachion_vec[byte_index + 1] = true;
+            if tachion_vec[byte_index - line_length] {
+                if input[byte_index + (line_index * line_length)] == b'^' {
+                    result += 1;
+                    tachion_vec[byte_index - 1] = true;
+                    tachion_vec[byte_index + 1] = true;
+                } else if line_index < line_count - 1 {
+                    // there is a form of parity between the lines.
+                    // a tachion will only ever have a chance to interact on lines with the opposite parity it was created on
+                    // because of that, if no splitter is in the way, we know the tachion will propagate at least 2 lines down
+                    tachion_vec[byte_index + line_length] = true;
+                }
             }
         }
     }
@@ -41,7 +48,7 @@ pub fn solve_part2(input: &[u8]) -> u64 {
     let mut tachion_vec = vec![0; line_length * line_count];
     tachion_vec[(line_length / 2) - 1] = 1u64;
     for line_index in 1..line_count {
-        let line_first_byte_index = (line_index * (line_length - 1)) + (line_length / 2);
+        let line_first_byte_index = (line_index * line_length) + (line_length / 2) - line_index;
         for row_index in 0..line_index {
             let byte_index = line_first_byte_index + (2 * row_index);
             if input[byte_index + (line_index * line_length)] == b'^' {
@@ -50,6 +57,7 @@ pub fn solve_part2(input: &[u8]) -> u64 {
             } else if line_index < line_count - 1 {
                 tachion_vec[byte_index + line_length] = tachion_vec[byte_index - line_length];
             } else {
+                // special handleing of parity for the second to last line
                 tachion_vec[byte_index] = tachion_vec[byte_index - line_length];
             }
         }

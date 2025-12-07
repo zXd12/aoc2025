@@ -22,8 +22,8 @@ day05 part1:      20,535.00 ns/iter (+/- 1,410.90)
 day05 part2:       5,133.24 ns/iter (+/- 140.38)
 day06 part1:      38,253.05 ns/iter (+/- 2,720.55)
 day06 part2:      11,524.62 ns/iter (+/- 846.51)
-day07 part1:       2,255.41 ns/iter (+/- 69.43)
-day07 part2:       3,546.30 ns/iter (+/- 147.88)
+day07 part1:       2,772.29 ns/iter (+/- 164.69)
+day07 part2:       3,309.69 ns/iter (+/- 93.42)
 ```
 
 ## Todo
