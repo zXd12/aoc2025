@@ -6,10 +6,9 @@ use crate::utils::test_day;
 as per the problem formulation, the following conditions are required to avoid undefined behaviour:
     - there are at least 3 different networks after applying the number_of_connections first connections
     - there are no tied euclidian distances for the last connection before the cutoff
-    - the number of connections to keep is different between the exemple value and standrad inputs.
+    - the number of connections to apply is different between the exemple value and standrad inputs.
         the number of junction boxes is used to discriminate between the 2 cases, with an arbitrary cutoff at 100
 added assumptions:
-    - the input ends with a \n
     - the euclidian distance computation can be done in isize bounds
 */
 pub fn solve_part1(input: &[u8]) -> u64 {
@@ -31,7 +30,7 @@ pub fn solve_part1(input: &[u8]) -> u64 {
             // it would technicaly be possible to fill the BTree in 2 distinct steps
             // so the next 498500 iterations have one less condition to check
             // (in the case of the standard inputs which have 1000*999/2 total connections)
-            // but I don't see a clean way to that
+            // but I don't see a clean (and more efficient) way to that
             if closest_distances.len() < number_of_connections {
                 closest_distances.push((euclidian_distance, x, y));
             } else if closest_distances.peek().unwrap().0 > euclidian_distance {
@@ -71,13 +70,7 @@ pub fn solve_part1(input: &[u8]) -> u64 {
     for network in networks {
         network_sizes[network] += 1;
     }
-    // network 0 is for boxes without a network. it should be counted as multiple networks of size 1
-    // we don't need to represent all of them in the list, as we only need the 3 biggest networks
-    // the worst case is that there is no network at all, which can be handled by having 3 1-sized "networks"
     network_sizes[0] = 1;
-    network_sizes.push(1);
-    network_sizes.push(1);
-    network_sizes.sort();
     return network_sizes[network_sizes.len() - 1]
         * network_sizes[network_sizes.len() - 2]
         * network_sizes[network_sizes.len() - 3];
@@ -87,7 +80,6 @@ pub fn solve_part1(input: &[u8]) -> u64 {
 as per the problem formulation, the following conditions are required to avoid undefined behaviour:
     - there are no tied euclidian distances capable of closing the network
 added assumptions:
-    - the input ends with a \n
     - the euclidian distance computation can be done in isize bounds
 */
 pub fn solve_part2(input: &[u8]) -> u64 {
@@ -95,11 +87,12 @@ pub fn solve_part2(input: &[u8]) -> u64 {
     // Using a binary heap is more efficient than sorting a vec *when the junction boxes are evenly distributed*
     // When they are, the network is closed after only a few thousands connections, so we actually do not need to sort the entire list,
     // and the binary heap, which allows to get sorted elements one by one at a O(log(n)) cost is our best choice
+    // (total cost of O(c*log(n)) with c being the number of connections needed, which was <5K for my input)
     // If the data is skewed, with for example a single junction box way far off the others, sorting pretty much the entire list is required
     // in which case the binary heap is way worse than unstable_sorting() a vec.
     // Choosing a strategy while reading the positions during the parsing process is an option, and would allow for the best of both worlds
-    // but this would cost quite a bit of time, and would not eliminate the reliance on an assumed shape of the data,
-    // so I'm satisfied with being most efficient on standard input data.
+    // but this would cost quite a bit of time, and would not eliminate the reliance on assumed caraterisitcs of the data,
+    // so I'm satisfied with being most efficient on standard input data, while still supporting any possible input.
     let mut distances = BinaryHeap::with_capacity(junction_box_positions.len());
     for x in 0..junction_box_positions.len() {
         let box_x = junction_box_positions[x];
@@ -111,7 +104,7 @@ pub fn solve_part2(input: &[u8]) -> u64 {
     // compute the networks
     let mut networks = vec![0; junction_box_positions.len()];
     let mut network_sizes = vec![0];
-    let mut grown_network = 0; // the network that was increased in size from the operation
+    let mut grown_network = 0; // the network that was increased in size from the connection
     loop {
         let (_, x, y) = distances.pop().unwrap().0;
         match (networks[x], networks[y]) {
@@ -147,7 +140,7 @@ pub fn solve_part2(input: &[u8]) -> u64 {
                 }
             }
         }
-        if network_sizes[grown_network] >= networks.len() {
+        if network_sizes[grown_network] >= junction_box_positions.len() {
             return (junction_box_positions[x][0] * junction_box_positions[y][0]) as u64;
         }
     }
