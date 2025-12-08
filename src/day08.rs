@@ -92,7 +92,6 @@ added assumptions:
 */
 pub fn solve_part2(input: &[u8]) -> u64 {
     let junction_box_positions = parse(input);
-    // compute the number_of_connections closest distances
     // Using a binary heap is more efficient than sorting a vec *when the junction boxes are evenly distributed*
     // When they are, the network is closed after only a few thousands connections, so we actually do not need to sort the entire list,
     // and the binary heap, which allows to get sorted elements one by one at a O(log(n)) cost is our best choice
