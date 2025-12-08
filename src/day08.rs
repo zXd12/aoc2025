@@ -1,4 +1,4 @@
-use std::collections::BinaryHeap;
+use std::{cmp::Reverse, collections::BinaryHeap};
 
 use crate::utils::test_day;
 
@@ -11,7 +11,6 @@ as per the problem formulation, the following conditions are required to avoid u
 added assumptions:
     - the input ends with a \n
     - the euclidian distance computation can be done in isize bounds
-    - every euclidian distance is unique
 */
 pub fn solve_part1(input: &[u8]) -> u64 {
     let junction_box_positions = parse(input);
@@ -90,35 +89,32 @@ as per the problem formulation, the following conditions are required to avoid u
 added assumptions:
     - the input ends with a \n
     - the euclidian distance computation can be done in isize bounds
-    - every euclidian distance is unique
 */
 pub fn solve_part2(input: &[u8]) -> u64 {
     let junction_box_positions = parse(input);
     // compute the number_of_connections closest distances
-    let mut distances = vec![];
+    // Using a binary heap is more efficient than sorting a vec *when the junction boxes are evenly distributed*
+    // When they are, the network is closed after only a few thousands connections, so we actually do not need to sort the entire list,
+    // and the binary heap, which allows to get sorted elements one by one at a O(log(n)) cost is our best choice
+    // If the data is skewed, with for example a single junction box way far off the others, sorting pretty much the entire list is required
+    // in which case the binary heap is way worse than unstable_sorting() a vec.
+    // Choosing a strategy while reading the positions during the parsing process is an option, and would allow for the best of both worlds
+    // but this would cost quite a bit of time, and would not eliminate the reliance on an assumed shape of the data,
+    // so I'm satisfied with being most efficient on standard input data.
+    let mut distances = BinaryHeap::with_capacity(junction_box_positions.len());
     for x in 0..junction_box_positions.len() {
         let box_x = junction_box_positions[x];
         for y in (x + 1)..junction_box_positions.len() {
             let box_y = junction_box_positions[y];
-            distances.push((euclidian_distance(box_x, box_y), x, y));
+            distances.push(Reverse((euclidian_distance(box_x, box_y), x, y)));
         }
     }
-    // :skull:
-    // 95% of the runtime of the function is spent here
-    // One way to be faster than this would be to build the networks during sorting, as soon as elements are in their final position
-    // My input closes the network after less than 5000 connections, so the remaining 499000 ones do not technicaly need to be sorted
-    // This would be way faster for inputs with an even distribution, which require ~ 2/n*​ln(n) edges for a complete graph
-    // (according to chatgpt, taking purely random edges, or 3454 edges for 1000 nodes, which is not that far of my 4710)
-    // But synthetic data with, for example, a junction box far from the others, forces the sorting of the entire array to get to it being the next closest one
-    // And my implementation would of course be much slower than rust builtin unstable sort.
-    distances.sort_unstable_by_key(|&(dist, _, _)| dist);
     // compute the networks
     let mut networks = vec![0; junction_box_positions.len()];
     let mut network_sizes = vec![0];
     let mut grown_network = 0; // the network that was increased in size from the operation
-    let mut distance_index = 0;
-    for (_, x, y) in distances {
-        distance_index += 1;
+    loop {
+        let (_, x, y) = distances.pop().unwrap().0;
         match (networks[x], networks[y]) {
             (0, 0) => {
                 // new network of size 2
@@ -143,7 +139,6 @@ pub fn solve_part2(input: &[u8]) -> u64 {
                     // I feel like there should be something faster than iterating over the entire list
                     // but after thinking about it for a while I couldn't find anything
                     // the code goes through this loop 295 times with my input, so 295 000 total comparison
-                    // which is a lot, but not that much compared to the n log(n) sort of the 500K elements distances array
                     for i in 0..networks.len() {
                         if networks[i] == network_y {
                             networks[i] = grown_network;
@@ -154,11 +149,9 @@ pub fn solve_part2(input: &[u8]) -> u64 {
             }
         }
         if network_sizes[grown_network] >= networks.len() {
-            println!("distance n°{distance_index}");
             return (junction_box_positions[x][0] * junction_box_positions[y][0]) as u64;
         }
     }
-    unreachable!()
 }
 
 fn parse(input: &[u8]) -> Vec<[isize; 3]> {
