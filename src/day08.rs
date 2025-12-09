@@ -93,14 +93,16 @@ pub fn solve_part2(input: &[u8]) -> u64 {
     // Choosing a strategy while reading the positions during the parsing process is an option, and would allow for the best of both worlds
     // but this would cost quite a bit of time, and would not eliminate the reliance on assumed caraterisitcs of the data,
     // so I'm satisfied with being most efficient on standard input data, while still supporting any possible input.
-    let mut distances = BinaryHeap::with_capacity(junction_box_positions.len());
+    let mut distances_vec = Vec::with_capacity(junction_box_positions.len());
     for x in 0..junction_box_positions.len() {
         let box_x = junction_box_positions[x];
         for y in (x + 1)..junction_box_positions.len() {
             let box_y = junction_box_positions[y];
-            distances.push(Reverse((euclidian_distance(box_x, box_y), x, y)));
+            distances_vec.push(Reverse((euclidian_distance(box_x, box_y), x, y)));
         }
     }
+    let mut distances = BinaryHeap::from(distances_vec);
+
     // compute the networks
     let mut networks = vec![0; junction_box_positions.len()];
     let mut network_sizes = vec![0];
